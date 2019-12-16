@@ -8,12 +8,12 @@ json.hpp: include_dir
 	@curl -Lso $(include_dir)/$@ $(json_src)
 
 parse.o: parse.h parse.cpp
-	g++ -o $@ -c parse.cpp
+	g++ -std=c++17 -o $@ -c parse.cpp
 
 clean:
 	@rm -rf $(include_dir) *.o
 .PHONY: clean
 
 build: json.hpp parse.o
-	g++ -o obj_to_json -I $(include_dir) obj_to_json.cpp parse.o
+	g++ -std=c++17 -o obj_to_json -I $(include_dir) obj_to_json.cpp parse.o
 .PHONY: build
