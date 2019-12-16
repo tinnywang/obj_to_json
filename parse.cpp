@@ -44,30 +44,30 @@ std::vector<object> parse(const char* filename) {
                     o.vertex_normals.push_back(p);
                 }
                 case F: {
-                    std::string vn_indices;
-                    std::string::size_type sz;
-
-                    if (o.name.compare("Head_Head_male") == 0) {
-                        std::cout << "vertex normal aggregates: " << o.vertex_normals_aggregate.size() << std::endl;
-                        return objects;
-                    }
-
-                    while(ss >> vn_indices) {
+                    std::string indices, index;
+                    while(ss >> indices) {
                         try {
-                            // vertex index
-                            int vertex_index = std::stoi(vn_indices, &sz) - 1;
-                            o.faces.push_back(vertex_index);
-                            // vertex texture index (ignore)
-                            vn_indices = vn_indices.substr(sz + 1);
-                            std::stoi(vn_indices, &sz);
-                            // vertex normal index
-                            int vn_index = std::stoi(vn_indices.substr(sz + 1)) - 1;
+                            std::stringstream indices_ss(indices);
 
-                            std::pair<point, int> pair = o.vertex_normals_aggregate.at(vertex_index);
-                            pair.first = addPoints(pair.first, o.vertex_normals.at(vn_index));
-                            pair.second++;
-                            // TODO: test if this line is necessary...
-                            o.vertex_normals_aggregate[vertex_index] = pair;
+                            // vertex index
+                            std::getline(indices_ss, index, '/');
+                            int vertex_index = std::stoi(index) - 1;
+                            o.faces.push_back(vertex_index);
+
+                            // vertex texture index (ignore)
+                            std::getline(indices_ss, index, '/');
+
+                            // vertex normal index
+                            std::getline(indices_ss, index);
+                            if (!index.empty()) {
+                              int vn_index = std::stoi(index) - 1;
+
+                              std::pair<point, int> pair = o.vertex_normals_aggregate.at(vertex_index);
+                              pair.first = addPoints(pair.first, o.vertex_normals.at(vn_index));
+                              pair.second++;
+                              // TODO: test if this line is necessary...
+                              o.vertex_normals_aggregate[vertex_index] = pair;
+                            }
                         } catch (std::invalid_argument e) {
                             std::cerr << filename << ", line " << line_number << ": " << e.what() << std::endl;
                         } catch (std::out_of_range e) {
