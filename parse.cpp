@@ -1,11 +1,12 @@
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
-#include "parse.h"
 
+#include "parse.h"
 
 std::vector<object> parse(const char* filename) {
     std::ifstream file(filename);
@@ -80,13 +81,33 @@ std::vector<object> parse(const char* filename) {
             // ignore any unsupported definitions
         } 
     }
+
+    for (auto it = o.vertex_normals_aggregate.begin(); it != o.vertex_normals_aggregate.end(); it++) {
+      std::pair<point, int> pair = *it;
+      point normal = normalize({
+        .x = pair.first.x / pair.second,
+        .y = pair.first.y / pair.second,
+        .z = pair.first.z / pair.second,
+      });
+      o.normals.push_back(normal);
+    }
+
     return objects;
 }
 
-point addPoints(point const &p1, point const &p2) {
+point addPoints(const point& p1, const point& p2) {
     return point{
         .x = p1.x + p2.x,
         .y = p1.y + p2.y,
         .z = p1.z + p2.z,
     };
+}
+
+point normalize(const point& p) {
+  double magnitude = std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+  return point{
+    .x = p.x / magnitude,
+    .y = p.y / magnitude,
+    .z = p.z / magnitude,
+  };
 }
