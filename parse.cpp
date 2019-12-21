@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+#include "include/json.hpp"
 #include "parse.h"
 
 std::vector<object> parse(const char* filename) {
@@ -14,9 +15,7 @@ std::vector<object> parse(const char* filename) {
     unsigned int line_number = 0;
     std::stringstream ss;
     std::string definition;
-
     std::vector<object> objects;
-    object o;
 
     while(std::getline(file, line)) {
         line_number++;
@@ -25,26 +24,29 @@ std::vector<object> parse(const char* filename) {
         try {
             switch(definitions.at(definition)) {
                 case O: {
-                    o = object{};
+                    object o;
                     ss >> o.name;
                     objects.push_back(o);
                 }
                 case V: {
+                    object& o = objects.back();
                     double x, y, z;
                     ss >> x >> y >> z;
                     o.vertices.push_back(x);
                     o.vertices.push_back(y);
                     o.vertices.push_back(z);
 
-                    point p = { .x = 0, .y = 0, .z = 0};
+                    point p = { .x = 0, .y = 0, .z = 0 };
                     o.vertex_normals_aggregate.push_back(std::make_pair(p, 0));
                 }
                 case VN: {
+                    object& o = objects.back();
                     point p;
                     ss >> p.x >> p.y >> p.z;
                     o.vertex_normals.push_back(p);
                 }
                 case F: {
+                    object& o = objects.back();
                     std::string indices, index;
                     while(ss >> indices) {
                         try {
@@ -82,17 +84,30 @@ std::vector<object> parse(const char* filename) {
         } 
     }
 
-    for (auto it = o.vertex_normals_aggregate.begin(); it != o.vertex_normals_aggregate.end(); it++) {
-      std::pair<point, int> pair = *it;
-      point normal = normalize({
-        .x = pair.first.x / pair.second,
-        .y = pair.first.y / pair.second,
-        .z = pair.first.z / pair.second,
-      });
-      o.normals.push_back(normal);
+    for (auto objects_it = objects.begin(); objects_it != objects.end(); objects_it++) {
+      for (auto normals_it = objects_it->vertex_normals_aggregate.begin(); normals_it != objects_it->vertex_normals_aggregate.end(); normals_it++) {
+        std::pair<point, int> pair = *normals_it;
+        point normal = normalize({
+          .x = pair.first.x / pair.second,
+          .y = pair.first.y / pair.second,
+          .z = pair.first.z / pair.second,
+        });
+        objects_it->normals.push_back(normal.x);
+        objects_it->normals.push_back(normal.y);
+        objects_it->normals.push_back(normal.z);
+      }
     }
 
     return objects;
+}
+
+void to_json(nlohmann::json& j, const object& o) {
+  j = nlohmann::json{
+    {"name", o.name},
+    {"vertices", o.vertices},
+    {"faces", o.faces},
+    {"normals", o.normals},
+  };
 }
 
 point addPoints(const point& p1, const point& p2) {

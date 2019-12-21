@@ -1,4 +1,7 @@
 #include <iostream>
+#include <vector>
+
+#include "include/json.hpp"
 #include "parse.h"
 
 int main(int argc, char** argv) {
@@ -7,7 +10,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    parse(argv[1]);
+    std::vector<object> objects = parse(argv[1]);
+    std::cout << nlohmann::json(objects) << std::endl;
 
     return 0;
 }
