@@ -27,6 +27,7 @@ std::vector<object> parse(const char* filename) {
                     object o;
                     ss >> o.name;
                     objects.push_back(o);
+                    break;
                 }
                 case V: {
                     object& o = objects.back();
@@ -38,12 +39,14 @@ std::vector<object> parse(const char* filename) {
 
                     point p = { .x = 0, .y = 0, .z = 0 };
                     o.vertex_normals_aggregate.push_back(std::make_pair(p, 0));
+                    break;
                 }
                 case VN: {
                     object& o = objects.back();
                     point p;
                     ss >> p.x >> p.y >> p.z;
                     o.vertex_normals.push_back(p);
+                    break;
                 }
                 case F: {
                     object& o = objects.back();
@@ -78,6 +81,7 @@ std::vector<object> parse(const char* filename) {
                         }
                     }
                 }
+                break;
             }
         } catch (std::out_of_range) {
             // ignore any unsupported definitions
