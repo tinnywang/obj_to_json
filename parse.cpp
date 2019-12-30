@@ -68,11 +68,9 @@ std::vector<object> parse(const char* filename) {
                             if (!index.empty()) {
                               int vn_index = std::stoi(index) - 1;
 
-                              std::pair<point, int> pair = o.vertex_normals_aggregate.at(vertex_index);
+                              std::pair<point, int>& pair = o.vertex_normals_aggregate.at(vertex_index);
                               pair.first = addPoints(pair.first, o.vertex_normals.at(vn_index));
                               pair.second++;
-                              // TODO: test if this line is necessary...
-                              o.vertex_normals_aggregate[vertex_index] = pair;
                             }
                         } catch (std::invalid_argument e) {
                             std::cerr << filename << ", line " << line_number << ": " << e.what() << std::endl;
@@ -90,7 +88,7 @@ std::vector<object> parse(const char* filename) {
 
     for (auto objects_it = objects.begin(); objects_it != objects.end(); objects_it++) {
       for (auto normals_it = objects_it->vertex_normals_aggregate.begin(); normals_it != objects_it->vertex_normals_aggregate.end(); normals_it++) {
-        std::pair<point, int> pair = *normals_it;
+        std::pair<point, int>& pair = *normals_it;
         point normal = normalize({
           .x = pair.first.x / pair.second,
           .y = pair.first.y / pair.second,
