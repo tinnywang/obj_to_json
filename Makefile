@@ -5,7 +5,7 @@ include_dir:
 	@mkdir -p $(include_dir)
 
 $(include_dir)/json.hpp: include_dir
-	@curl -Lso $@ $(json_src)
+	@curl -m 2 -Lso $@ $(json_src)
 
 parse.o: parse.h parse.cpp
 	g++ -std=c++17 -o $@ -c parse.cpp
