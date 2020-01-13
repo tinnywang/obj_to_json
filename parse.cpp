@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -31,13 +32,11 @@ std::vector<object> parse(const char* filename) {
                 }
                 case V: {
                     object& o = objects.back();
-                    double x, y, z;
-                    ss >> x >> y >> z;
-                    o.vertices.push_back(x);
-                    o.vertices.push_back(y);
-                    o.vertices.push_back(z);
+                    point p;
+                    ss >> p.x >> p.y >> p.z;
+                    o.vertices.push_back(p);
 
-                    point p = { .x = 0, .y = 0, .z = 0 };
+                    p = { .x = 0, .y = 0, .z = 0 };
                     o.vertex_normals_aggregate.push_back(std::make_pair(p, 0));
                     break;
                 }
@@ -104,9 +103,16 @@ std::vector<object> parse(const char* filename) {
 }
 
 void to_json(nlohmann::json& j, const object& o) {
+  std::vector<double> vertices;
+  std::for_each(o.vertices.begin(), o.vertices.end(), [&vertices](const point& p) {
+    vertices.push_back(p.x);
+    vertices.push_back(p.y);
+    vertices.push_back(p.z);
+  });
+
   j = nlohmann::json{
     {"name", o.name},
-    {"vertices", o.vertices},
+    {"vertices", vertices},
     {"faces", o.faces},
     {"normals", o.normals},
   };

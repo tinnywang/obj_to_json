@@ -30,7 +30,7 @@ struct point {
 
 struct object {
     std::string name;
-    std::vector<double> vertices;
+    std::vector<point> vertices;
     std::vector<point> vertex_normals;
     std::vector<int> faces;
     std::vector<std::pair<point, int>> vertex_normals_aggregate;
