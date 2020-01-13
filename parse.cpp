@@ -27,6 +27,16 @@ std::vector<object> parse(const char* filename) {
                 case O: {
                     object o;
                     ss >> o.name;
+
+                    if (objects.empty()) {
+                      o.v_offset = 0;
+                      o.vn_offset = 0;
+                    } else {
+                      const object& prev = objects.back();
+                      o.v_offset = prev.vertices.size();
+                      o.vn_offset = prev.vertex_normals.size();
+                    }
+
                     objects.push_back(o);
                     break;
                 }
@@ -56,8 +66,8 @@ std::vector<object> parse(const char* filename) {
 
                             // vertex index
                             std::getline(indices_ss, index, '/');
-                            int vertex_index = std::stoi(index) - 1;
-                            o.faces.push_back(vertex_index);
+                            int v_index = std::stoi(index) - o.v_offset - 1;
+                            o.faces.push_back(v_index);
 
                             // vertex texture index (ignore)
                             std::getline(indices_ss, index, '/');
@@ -65,9 +75,9 @@ std::vector<object> parse(const char* filename) {
                             // vertex normal index
                             std::getline(indices_ss, index);
                             if (!index.empty()) {
-                              int vn_index = std::stoi(index) - 1;
+                              int vn_index = std::stoi(index) - o.vn_offset - 1;
 
-                              std::pair<point, int>& pair = o.vertex_normals_aggregate.at(vertex_index);
+                              std::pair<point, int>& pair = o.vertex_normals_aggregate.at(v_index);
                               pair.first = addPoints(pair.first, o.vertex_normals.at(vn_index));
                               pair.second++;
                             }

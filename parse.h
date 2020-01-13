@@ -35,6 +35,9 @@ struct object {
     std::vector<int> faces;
     std::vector<std::pair<point, int>> vertex_normals_aggregate;
     std::vector<double> normals;
+
+    std::vector<point>::size_type v_offset;
+    std::vector<point>::size_type vn_offset;
 };
 
 std::vector<object> parse(const char* filename);
