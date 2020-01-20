@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -26,18 +27,26 @@ std::vector<object> parse(const char* filename) {
                 case O: {
                     object o;
                     ss >> o.name;
+
+                    if (objects.empty()) {
+                      o.v_offset = 0;
+                      o.vn_offset = 0;
+                    } else {
+                      const object& prev = objects.back();
+                      o.v_offset = prev.vertices.size();
+                      o.vn_offset = prev.vertex_normals.size();
+                    }
+
                     objects.push_back(o);
                     break;
                 }
                 case V: {
                     object& o = objects.back();
-                    double x, y, z;
-                    ss >> x >> y >> z;
-                    o.vertices.push_back(x);
-                    o.vertices.push_back(y);
-                    o.vertices.push_back(z);
+                    point p;
+                    ss >> p.x >> p.y >> p.z;
+                    o.vertices.push_back(p);
 
-                    point p = { .x = 0, .y = 0, .z = 0 };
+                    p = { .x = 0, .y = 0, .z = 0 };
                     o.vertex_normals_aggregate.push_back(std::make_pair(p, 0));
                     break;
                 }
@@ -57,8 +66,8 @@ std::vector<object> parse(const char* filename) {
 
                             // vertex index
                             std::getline(indices_ss, index, '/');
-                            int vertex_index = std::stoi(index) - 1;
-                            o.faces.push_back(vertex_index);
+                            int v_index = std::stoi(index) - o.v_offset - 1;
+                            o.faces.push_back(v_index);
 
                             // vertex texture index (ignore)
                             std::getline(indices_ss, index, '/');
@@ -66,9 +75,9 @@ std::vector<object> parse(const char* filename) {
                             // vertex normal index
                             std::getline(indices_ss, index);
                             if (!index.empty()) {
-                              int vn_index = std::stoi(index) - 1;
+                              int vn_index = std::stoi(index) - o.vn_offset - 1;
 
-                              std::pair<point, int>& pair = o.vertex_normals_aggregate.at(vertex_index);
+                              std::pair<point, int>& pair = o.vertex_normals_aggregate.at(v_index);
                               pair.first = addPoints(pair.first, o.vertex_normals.at(vn_index));
                               pair.second++;
                             }
@@ -104,9 +113,16 @@ std::vector<object> parse(const char* filename) {
 }
 
 void to_json(nlohmann::json& j, const object& o) {
+  std::vector<double> vertices;
+  std::for_each(o.vertices.begin(), o.vertices.end(), [&vertices](const point& p) {
+    vertices.push_back(p.x);
+    vertices.push_back(p.y);
+    vertices.push_back(p.z);
+  });
+
   j = nlohmann::json{
     {"name", o.name},
-    {"vertices", o.vertices},
+    {"vertices", vertices},
     {"faces", o.faces},
     {"normals", o.normals},
   };
