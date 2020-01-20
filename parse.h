@@ -1,3 +1,4 @@
+#include <fstream>
 #include <map>
 #include <string>
 #include <utility>
@@ -42,11 +43,11 @@ struct object {
     std::vector<point>::size_type vn_offset;
 };
 
-std::vector<object> parse(const char* filename);
+std::vector<object> parse(std::ifstream& file);
 
 void to_json(nlohmann::json& j, const object& o);
 
-point addPoints(point const &p1, point const &p2);
-point normalize(point const &p);
+point addPoints(const point& p1, const point& p2);
+point normalize(const point& p);
 
-#endif  // INCLUDE_PARSE_H
+#endif // INCLUDE_PARSE_H

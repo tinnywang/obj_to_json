@@ -10,7 +10,14 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::vector<object> objects = parse(argv[1]);
+    const char* filename = argv[1];
+    std::ifstream file(filename);
+    if (file.fail()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return 1;
+    }
+
+    std::vector<object> objects = parse(file);
     std::cout << nlohmann::json(objects) << std::endl;
 
     return 0;

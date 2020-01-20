@@ -10,8 +10,7 @@
 #include "include/json.hpp"
 #include "parse.h"
 
-std::vector<object> parse(const char* filename) {
-    std::ifstream file(filename);
+std::vector<object> parse(std::ifstream& file) {
     std::string line;
     unsigned int line_number = 0;
     std::stringstream ss;
@@ -82,9 +81,9 @@ std::vector<object> parse(const char* filename) {
                               pair.second++;
                             }
                         } catch (std::invalid_argument e) {
-                            std::cerr << filename << ", line " << line_number << ": " << e.what() << std::endl;
+                            std::cerr << "line " << line_number << ": " << e.what() << std::endl;
                         } catch (std::out_of_range e) {
-                            std::cerr << filename << ", line " << line_number << ": " << e.what() << std::endl;
+                            std::cerr << "line " << line_number << ": " << e.what() << std::endl;
                         }
                     }
                 }
