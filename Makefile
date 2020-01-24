@@ -1,5 +1,5 @@
 json_src := https://github.com/nlohmann/json/releases/download/v3.7.0/json.hpp
-objects := object.o parse.o point.o
+objects := material.o object.o parse.o point.o
 src := $(shell find . -name "*.cpp" -o -name "*.h")
 
 nlohmann:
@@ -7,6 +7,9 @@ nlohmann:
 
 nlohmann/json.hpp: nlohmann
 	@curl -m 2 -Lso $@ $(json_src)
+
+material.o: material.cpp
+	g++ -std=c++17 -c -o $@ $^
 
 object.o: nlohmann/json.hpp object.cpp
 	g++ -std=c++17 -c -I nlohmann -o $@ object.cpp
