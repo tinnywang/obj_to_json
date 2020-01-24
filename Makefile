@@ -1,23 +1,28 @@
-include_dir := include
 json_src := https://github.com/nlohmann/json/releases/download/v3.7.0/json.hpp
-src := $$(find . -name "*.cpp" -o -name "*.h")
+objects := object.o parse.o point.o
+src := $(shell find . -name "*.cpp" -o -name "*.h")
 
+nlohmann:
+	@mkdir -p $@
 
-include_dir:
-	@mkdir -p $(include_dir)
-
-$(include_dir)/json.hpp: include_dir
+nlohmann/json.hpp: nlohmann
 	@curl -m 2 -Lso $@ $(json_src)
 
-parse.o: parse.h parse.cpp
-	g++ -std=c++17 -o $@ -c parse.cpp
+object.o: nlohmann/json.hpp object.cpp
+	g++ -std=c++17 -c -I nlohmann -o $@ object.cpp
+
+parse.o: parse.cpp
+	g++ -std=c++17 -c -o $@ $^
+
+point.o: point.cpp
+	g++ -std=c++17 -c -o $@ $^
 
 clean:
-	@rm -rf $(include_dir) *.o
+	@rm -rf *.o nlohmann obj_to_json
 .PHONY: clean
 
-build: format $(include_dir)/json.hpp parse.o
-	g++ -std=c++17 -o obj_to_json -I $(include_dir) obj_to_json.cpp parse.o
+build: format $(objects)
+	g++ -std=c++17 -o obj_to_json obj_to_json.cpp $(objects)
 .PHONY: build
 
 format:
