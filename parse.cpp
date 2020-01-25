@@ -23,73 +23,74 @@ std::vector<object> parse(std::ifstream &file) {
     ss >> definition;
     try {
       switch (definitions.at(definition)) {
-      case O: {
-        object o;
-        ss >> o.name;
+        case O: {
+          object o;
+          ss >> o.name;
 
-        if (objects.empty()) {
-          o.v_offset = 0;
-          o.vn_offset = 0;
-        } else {
-          const object &prev = objects.back();
-          o.v_offset = prev.vertices.size();
-          o.vn_offset = prev.vertex_normals.size();
-        }
-
-        objects.push_back(o);
-        break;
-      }
-      case V: {
-        object &o = objects.back();
-        point p;
-        ss >> p.x >> p.y >> p.z;
-        o.vertices.push_back(p);
-
-        p = {.x = 0, .y = 0, .z = 0};
-        o.vertex_normals_aggregate.push_back(std::make_pair(p, 0));
-        break;
-      }
-      case VN: {
-        object &o = objects.back();
-        point p;
-        ss >> p.x >> p.y >> p.z;
-        o.vertex_normals.push_back(p);
-        break;
-      }
-      case F: {
-        object &o = objects.back();
-        std::string indices, index;
-        while (ss >> indices) {
-          try {
-            std::stringstream indices_ss(indices);
-
-            // vertex index
-            std::getline(indices_ss, index, '/');
-            int v_index = std::stoi(index) - o.v_offset - 1;
-            o.faces.push_back(v_index);
-
-            // vertex texture index (ignore)
-            std::getline(indices_ss, index, '/');
-
-            // vertex normal index
-            std::getline(indices_ss, index);
-            if (!index.empty()) {
-              int vn_index = std::stoi(index) - o.vn_offset - 1;
-
-              std::pair<point, int> &pair =
-                  o.vertex_normals_aggregate.at(v_index);
-              pair.first = addPoints(pair.first, o.vertex_normals.at(vn_index));
-              pair.second++;
-            }
-          } catch (std::invalid_argument e) {
-            std::cerr << "line " << line_number << ": " << e.what()
-                      << std::endl;
-          } catch (std::out_of_range e) {
-            std::cerr << "line " << line_number << ": " << e.what()
-                      << std::endl;
+          if (objects.empty()) {
+            o.v_offset = 0;
+            o.vn_offset = 0;
+          } else {
+            const object &prev = objects.back();
+            o.v_offset = prev.vertices.size();
+            o.vn_offset = prev.vertex_normals.size();
           }
+
+          objects.push_back(o);
+          break;
         }
-      } break;
+        case V: {
+          object &o = objects.back();
+          point p;
+          ss >> p.x >> p.y >> p.z;
+          o.vertices.push_back(p);
+
+          p = {.x = 0, .y = 0, .z = 0};
+          o.vertex_normals_aggregate.push_back(std::make_pair(p, 0));
+          break;
+        }
+        case VN: {
+          object &o = objects.back();
+          point p;
+          ss >> p.x >> p.y >> p.z;
+          o.vertex_normals.push_back(p);
+          break;
+        }
+        case F: {
+          object &o = objects.back();
+          std::string indices, index;
+          while (ss >> indices) {
+            try {
+              std::stringstream indices_ss(indices);
+
+              // vertex index
+              std::getline(indices_ss, index, '/');
+              int v_index = std::stoi(index) - o.v_offset - 1;
+              o.faces.push_back(v_index);
+
+              // vertex texture index (ignore)
+              std::getline(indices_ss, index, '/');
+
+              // vertex normal index
+              std::getline(indices_ss, index);
+              if (!index.empty()) {
+                int vn_index = std::stoi(index) - o.vn_offset - 1;
+
+                std::pair<point, int> &pair =
+                    o.vertex_normals_aggregate.at(v_index);
+                pair.first =
+                    addPoints(pair.first, o.vertex_normals.at(vn_index));
+                pair.second++;
+              }
+            } catch (std::invalid_argument e) {
+              std::cerr << "line " << line_number << ": " << e.what()
+                        << std::endl;
+            } catch (std::out_of_range e) {
+              std::cerr << "line " << line_number << ": " << e.what()
+                        << std::endl;
+            }
+          }
+        } break;
       }
     } catch (std::out_of_range) {
       // ignore any unsupported definitions

@@ -21,5 +21,5 @@ build: format $(include_dir)/json.hpp parse.o
 .PHONY: build
 
 format:
-	@clang-format -i $(src)
+	@clang-format -style=Google -i $(src)
 .PHONY: format

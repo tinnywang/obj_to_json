@@ -10,10 +10,10 @@
 #define INCLUDE_PARSE_H
 
 enum definition {
-  O,  // object
-  V,  // vertex
-  VN, // vertex normal
-  F   // face
+  O,   // object
+  V,   // vertex
+  VN,  // vertex normal
+  F    // face
 };
 
 static std::map<const std::string, definition> definitions = {
@@ -47,4 +47,4 @@ void to_json(nlohmann::json &j, const object &o);
 point addPoints(const point &p1, const point &p2);
 point normalize(const point &p);
 
-#endif // INCLUDE_PARSE_H
+#endif  // INCLUDE_PARSE_H
