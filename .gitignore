@@ -1,3 +1,6 @@
+*.json
+*.mtl
 *.o
-include/
+*.obj
+nlohmann
 obj_to_json
