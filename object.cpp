@@ -16,7 +16,7 @@
 
 namespace object {
 std::vector<object> parse(const std::string &filename) {
-  std::ifstream file = open(filename);
+  std::ifstream file = parse::open(filename);
   std::string line;
   unsigned int line_number = 0;
   std::stringstream ss;

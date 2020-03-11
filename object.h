@@ -11,6 +11,17 @@
 #define INCLUDE_OBJECT_H
 
 namespace object {
+
+enum definition {
+  O,  // object
+  V,  // vertex
+  VN, // vertex normal
+  F   // face
+};
+
+static std::map<const std::string, definition> definitions = {
+    {"o", O}, {"v", V}, {"vn", VN}, {"f", F}};
+
 struct object {
   std::string name;
   std::vector<point::point> vertices;

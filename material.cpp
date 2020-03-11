@@ -11,39 +11,40 @@
 
 namespace material {
 std::map<std::string, material> parse(const std::string &filename) {
-  std::ifstream file = open(filename);
+  std::ifstream file = parse::open(filename);
   std::string line;
   std::stringstream ss;
   std::string definition;
   std::map<std::string, material> materials;
 
+  material *m;
   while (std::getline(file, line)) {
     ss = std::stringstream(line);
     ss >> definition;
-    material _m;
-    material &m = _m;
 
     try {
       switch (definitions.at(definition)) {
       case newmtl: {
-        ss >> m.name;
-        materials.emplace(m.name, m);
+        material _m;
+        ss >> _m.name;
+        materials.emplace(_m.name, _m);
+        m = &materials.at(_m.name);
         break;
       }
       case Ka: {
-        parse(ss, m.ambient);
+        parse(ss, m->ambient);
         break;
       }
       case Kd: {
-        parse(ss, m.diffuse);
+        parse(ss, m->diffuse);
         break;
       }
       case Ks: {
-        parse(ss, m.specular);
+        parse(ss, m->specular);
         break;
       }
       case Ns: {
-        ss >> m.specular_exponent;
+        ss >> m->specular_exponent;
         break;
       }
       case d:
@@ -78,7 +79,8 @@ void to_json(nlohmann::json &j, const material &m) {
 }
 
 void to_json(nlohmann::json &j, const color &c) {
-  std::vector<double> rgb = {c.r, c.g, c.b};
+  std::vector<double> rgb = {parse::round(c.r), parse::round(c.g),
+                             parse::round(c.b)};
   j = nlohmann::json(rgb);
 }
 
