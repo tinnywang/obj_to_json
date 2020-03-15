@@ -37,7 +37,6 @@ struct material {
 };
 
 std::map<std::string, material> parse(const std::string &filename);
-color &parse(std::stringstream &ss, color &c);
 void to_json(nlohmann::json &j, const material &m);
 void to_json(nlohmann::json &j, const color &c);
 void write(std::map<std::string, material> materials, std::ostream &out);

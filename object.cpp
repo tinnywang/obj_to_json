@@ -15,38 +15,20 @@
 #include "point.h"
 
 namespace object {
-std::vector<object> parse(const std::string &filename) {
-  std::ifstream file = parse::open(filename);
-  std::string line;
-  unsigned int line_number = 0;
+object &parse(std::ifstream &file, const std::string &filename,
+              unsigned int &line_number, object &o) {
+  std::string line, definition;
   std::stringstream ss;
-  std::string definition;
-  std::vector<object> objects;
+  std::streampos pos;
 
   while (std::getline(file, line)) {
-    line_number++;
     ss = std::stringstream(line);
     ss >> definition;
+    line_number++;
+
     try {
       switch (definitions.at(definition)) {
-      case O: {
-        object o;
-        ss >> o.name;
-
-        if (objects.empty()) {
-          o.v_offset = 0;
-          o.vn_offset = 0;
-        } else {
-          const object &prev = objects.back();
-          o.v_offset = prev.vertices.size();
-          o.vn_offset = prev.vertex_normals.size();
-        }
-
-        objects.push_back(o);
-        break;
-      }
       case V: {
-        object &o = objects.back();
         point::point p;
         ss >> p.x >> p.y >> p.z;
         o.vertices.push_back(p);
@@ -56,14 +38,12 @@ std::vector<object> parse(const std::string &filename) {
         break;
       }
       case VN: {
-        object &o = objects.back();
         point::point p;
         ss >> p.x >> p.y >> p.z;
         o.vertex_normals.push_back(p);
         break;
       }
       case F: {
-        object &o = objects.back();
         std::string indices, index;
         while (ss >> indices) {
           try {
@@ -96,6 +76,51 @@ std::vector<object> parse(const std::string &filename) {
                       << e.what() << std::endl;
           }
         }
+        break;
+      }
+      default: {
+        // Seek to the beginning of the line so that the definition can be
+        // re-read by a different parse function.
+        file.seekg(pos);
+        return o;
+      }
+      }
+    } catch (std::out_of_range) {
+    }
+
+    pos = file.tellg();
+  }
+
+  return o;
+}
+
+std::vector<object> parse(const std::string &filename) {
+  std::ifstream file = parse::open(filename);
+  std::string line, definition;
+  unsigned int line_number = 0;
+  std::stringstream ss;
+  std::vector<object> objects;
+
+  while (std::getline(file, line)) {
+    line_number++;
+    ss = std::stringstream(line);
+    ss >> definition;
+    try {
+      switch (definitions.at(definition)) {
+      case O: {
+        object o;
+        ss >> o.name;
+
+        if (objects.empty()) {
+          o.v_offset = 0;
+          o.vn_offset = 0;
+        } else {
+          const object &prev = objects.back();
+          o.v_offset = prev.vertices.size();
+          o.vn_offset = prev.vertex_normals.size();
+        }
+
+        objects.push_back(parse(file, filename, line_number, o));
         break;
       }
       }
