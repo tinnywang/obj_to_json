@@ -11,7 +11,7 @@ nlohmann/json.hpp: nlohmann
 material.o: material.cpp
 	g++ -std=c++17 -c -o $@ $^
 
-object.o: nlohmann/json.hpp object.cpp
+object.o: object.cpp
 	g++ -std=c++17 -c -I nlohmann -o $@ object.cpp
 
 parse.o: parse.cpp
@@ -24,7 +24,7 @@ clean:
 	@rm -rf *.o nlohmann obj_to_json
 .PHONY: clean
 
-build: format $(objects)
+build: format nlohmann/json.hpp $(objects)
 	g++ -std=c++17 -o obj_to_json obj_to_json.cpp $(objects)
 .PHONY: build
 
