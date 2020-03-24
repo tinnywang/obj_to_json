@@ -11,6 +11,7 @@
 
 #include "nlohmann/json.hpp"
 
+#include "material.h"
 #include "parse.h"
 #include "point.h"
 
@@ -32,9 +33,6 @@ object &parse(std::ifstream &file, const std::string &filename,
         point::point p;
         ss >> p.x >> p.y >> p.z;
         o.vertices.push_back(p);
-
-        p = {.x = 0, .y = 0, .z = 0};
-        o.vertex_normals_aggregate.push_back(std::make_pair(p, 0));
         break;
       }
       case VN: {
@@ -44,6 +42,14 @@ object &parse(std::ifstream &file, const std::string &filename,
         break;
       }
       case F: {
+        if (o.faces.empty()) {
+          o.faces.push_back(face_group{});
+        };
+        face_group &fg = o.faces.back();
+
+        point::point vn_sum;
+        int vn_count = 0;
+
         std::string indices, index;
         while (ss >> indices) {
           try {
@@ -52,7 +58,7 @@ object &parse(std::ifstream &file, const std::string &filename,
             // vertex index
             std::getline(indices_ss, index, '/');
             int v_index = std::stoi(index) - o.v_offset - 1;
-            o.faces.push_back(v_index);
+            fg.vertex_indices.push_back(v_index);
 
             // vertex texture index (ignore)
             std::getline(indices_ss, index, '/');
@@ -62,15 +68,35 @@ object &parse(std::ifstream &file, const std::string &filename,
             if (!index.empty()) {
               int vn_index = std::stoi(index) - o.vn_offset - 1;
 
-              std::pair<point::point, int> &pair =
-                  o.vertex_normals_aggregate.at(v_index);
-              pair.first =
-                  point::add(pair.first, o.vertex_normals.at(vn_index));
-              pair.second++;
+              vn_sum = point::add(vn_sum, o.vertex_normals.at(vn_index));
+              vn_count++;
             }
           } catch (std::invalid_argument e) {
             std::cerr << filename << ", line " << line_number << ": "
                       << e.what() << std::endl;
+          } catch (std::out_of_range e) {
+            std::cerr << filename << ", line " << line_number << ": "
+                      << e.what() << std::endl;
+          }
+        }
+
+        if (vn_count > 0) {
+          point::point normal =
+              point::normalize(point::scale(vn_sum, 1.0 / vn_count));
+          fg.normals.push_back(normal.x);
+          fg.normals.push_back(normal.y);
+          fg.normals.push_back(normal.z);
+        }
+        break;
+      }
+      case usemtl: {
+        std::string name;
+        ss >> name;
+        if (!o.materials.empty()) {
+          try {
+            face_group fg;
+            fg.material = o.materials.at(name);
+            o.faces.push_back(fg);
           } catch (std::out_of_range e) {
             std::cerr << filename << ", line " << line_number << ": "
                       << e.what() << std::endl;
@@ -101,12 +127,19 @@ std::vector<object> parse(const std::string &filename) {
   std::stringstream ss;
   std::vector<object> objects;
 
+  material::mtl materials;
   while (std::getline(file, line)) {
     line_number++;
     ss = std::stringstream(line);
     ss >> definition;
     try {
       switch (definitions.at(definition)) {
+      case mtllib: {
+        std::string material_filename;
+        ss >> material_filename;
+        materials = material::parse(material_filename);
+        break;
+      };
       case O: {
         object o;
         ss >> o.name;
@@ -120,33 +153,29 @@ std::vector<object> parse(const std::string &filename) {
           o.vn_offset = prev.vertex_normals.size();
         }
 
+        if (!materials.empty()) {
+          o.materials = materials;
+        }
+
         objects.push_back(parse(file, filename, line_number, o));
         break;
       }
+      default: { break; }
       }
     } catch (std::out_of_range) {
       // ignore any unsupported definitions
     }
   }
 
-  for (auto objects_it = objects.begin(); objects_it != objects.end();
-       objects_it++) {
-    for (auto normals_it = objects_it->vertex_normals_aggregate.begin();
-         normals_it != objects_it->vertex_normals_aggregate.end();
-         normals_it++) {
-      std::pair<point::point, int> &pair = *normals_it;
-      point::point normal = point::normalize({
-          .x = pair.first.x / pair.second,
-          .y = pair.first.y / pair.second,
-          .z = pair.first.z / pair.second,
-      });
-      objects_it->normals.push_back(normal.x);
-      objects_it->normals.push_back(normal.y);
-      objects_it->normals.push_back(normal.z);
-    }
-  }
-
   return objects;
+}
+
+void to_json(nlohmann::json &j, const face_group &fg) {
+  j = nlohmann::json{
+      {"vertex_indices", fg.vertex_indices},
+      {"normals", fg.normals},
+      {"material", fg.material},
+  };
 }
 
 void to_json(nlohmann::json &j, const object &o) {
@@ -162,7 +191,6 @@ void to_json(nlohmann::json &j, const object &o) {
       {"name", o.name},
       {"vertices", vertices},
       {"faces", o.faces},
-      {"normals", o.normals},
   };
 }
 

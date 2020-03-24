@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <istream>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -86,6 +87,7 @@ std::map<std::string, material> parse(const std::string &filename) {
         materials.emplace(m.name, parse(file, m));
         break;
       }
+      default: { break; }
       }
     } catch (std::out_of_range) {
       // ignore any unsupported definitions
@@ -95,14 +97,16 @@ std::map<std::string, material> parse(const std::string &filename) {
   return materials;
 }
 
-void to_json(nlohmann::json &j, const material &m) {
-  j = nlohmann::json{
-      {"name", m.name},
-      {"ambient", m.ambient},
-      {"diffuse", m.diffuse},
-      {"specular", m.specular},
-      {"specular_exponent", m.specular_exponent},
-  };
+void to_json(nlohmann::json &j, const std::optional<material> &m) {
+  if (m.has_value()) {
+    j = nlohmann::json{
+        {"name", m->name},
+        {"ambient", m->ambient},
+        {"diffuse", m->diffuse},
+        {"specular", m->specular},
+        {"specular_exponent", m->specular_exponent},
+    };
+  }
 }
 
 void to_json(nlohmann::json &j, const color &c) {

@@ -7,6 +7,7 @@ struct point {
 };
 
 point add(const point &p1, const point &p2);
+point scale(const point &p, double factor);
 point normalize(const point &p);
 }; // namespace point
 

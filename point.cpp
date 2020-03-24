@@ -11,6 +11,14 @@ point add(const point &p1, const point &p2) {
   };
 }
 
+point scale(const point &p, double factor) {
+  return point{
+      .x = p.x * factor,
+      .y = p.y * factor,
+      .z = p.z * factor,
+  };
+}
+
 point normalize(const point &p) {
   double magnitude = std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
   return point{

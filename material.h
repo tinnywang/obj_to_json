@@ -1,4 +1,5 @@
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,8 +37,10 @@ struct material {
   double specular_exponent;
 };
 
-std::map<std::string, material> parse(const std::string &filename);
-void to_json(nlohmann::json &j, const material &m);
+typedef std::map<std::string, material> mtl;
+
+mtl parse(const std::string &filename);
+void to_json(nlohmann::json &j, const std::optional<material> &m);
 void to_json(nlohmann::json &j, const color &c);
 void write(std::map<std::string, material> materials, std::ostream &out);
 }; // namespace material
