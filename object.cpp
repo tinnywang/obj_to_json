@@ -33,6 +33,8 @@ object &parse(std::ifstream &file, const std::string &filename,
         point::point p;
         ss >> p.x >> p.y >> p.z;
         o.vertices.push_back(p);
+
+        o.vn_aggregate.push_back(std::make_pair(point::point{}, 0));
         break;
       }
       case VN: {
@@ -46,9 +48,6 @@ object &parse(std::ifstream &file, const std::string &filename,
           o.faces.push_back(face_group{});
         };
         face_group &fg = o.faces.back();
-
-        point::point vn_sum;
-        int vn_count = 0;
 
         std::string indices, index;
         while (ss >> indices) {
@@ -67,9 +66,10 @@ object &parse(std::ifstream &file, const std::string &filename,
             std::getline(indices_ss, index);
             if (!index.empty()) {
               int vn_index = std::stoi(index) - o.vn_offset - 1;
-
-              vn_sum = point::add(vn_sum, o.vertex_normals.at(vn_index));
-              vn_count++;
+              std::pair<point::point, int> &pair = o.vn_aggregate.at(v_index);
+              pair.first =
+                  point::add(pair.first, o.vertex_normals.at(vn_index));
+              pair.second++;
             }
           } catch (std::invalid_argument e) {
             std::cerr << filename << ", line " << line_number << ": "
@@ -80,13 +80,6 @@ object &parse(std::ifstream &file, const std::string &filename,
           }
         }
 
-        if (vn_count > 0) {
-          point::point normal =
-              point::normalize(point::scale(vn_sum, 1.0 / vn_count));
-          fg.normals.push_back(normal.x);
-          fg.normals.push_back(normal.y);
-          fg.normals.push_back(normal.z);
-        }
         break;
       }
       case usemtl: {
@@ -115,6 +108,14 @@ object &parse(std::ifstream &file, const std::string &filename,
     }
 
     pos = file.tellg();
+  }
+
+  for (auto it = o.vn_aggregate.begin(); it != o.vn_aggregate.end(); it++) {
+    point::point normal =
+        point::normalize(point::scale(it->first, 1.0 / it->second));
+    o.normals.push_back(normal.x);
+    o.normals.push_back(normal.y);
+    o.normals.push_back(normal.z);
   }
 
   return o;
@@ -173,7 +174,6 @@ std::vector<object> parse(const std::string &filename) {
 void to_json(nlohmann::json &j, const face_group &fg) {
   j = nlohmann::json{
       {"vertex_indices", fg.vertex_indices},
-      {"normals", fg.normals},
       {"material", fg.material},
   };
 }
@@ -191,6 +191,7 @@ void to_json(nlohmann::json &j, const object &o) {
       {"name", o.name},
       {"vertices", vertices},
       {"faces", o.faces},
+      {"normals", o.normals},
   };
 }
 

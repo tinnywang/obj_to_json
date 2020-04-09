@@ -30,7 +30,6 @@ static std::map<const std::string, definition> definitions = {
 // A face_group contains the geometry of faces that use the same material.
 struct face_group {
   std::vector<int> vertex_indices;
-  std::vector<double> normals;
   std::optional<material::material> material;
 };
 
@@ -39,6 +38,9 @@ struct object {
   std::vector<point::point> vertices;
   std::vector<point::point> vertex_normals;
   std::vector<face_group> faces;
+  std::vector<double> normals;
+
+  std::vector<std::pair<point::point, int>> vn_aggregate;
 
   // Vertex indices and vertex normal indices are unique per file, not per
   // object. To convert a per-file index to a per-object index, decrement the
