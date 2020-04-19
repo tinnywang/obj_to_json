@@ -1,11 +1,13 @@
 #include "object.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -136,9 +138,13 @@ std::vector<object> parse(const std::string &filename) {
     try {
       switch (definitions.at(definition)) {
       case mtllib: {
-        std::string material_filename;
-        ss >> material_filename;
-        materials = material::parse(material_filename);
+        std::string mtl_filename;
+        ss >> mtl_filename;
+        std::filesystem::path dirname =
+            std::filesystem::path(filename).parent_path();
+        std::filesystem::path mtl_path =
+            dirname / std::filesystem::path(mtl_filename);
+        materials = material::parse(mtl_path);
         break;
       };
       case O: {
