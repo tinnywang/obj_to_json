@@ -38,9 +38,7 @@ struct object {
   std::vector<point::point> vertices;
   std::vector<point::point> vertex_normals;
   std::vector<face_group> faces;
-  std::vector<double> normals;
-
-  std::vector<std::pair<point::point, int>> vn_aggregate;
+  std::vector<point::point> normals;
 
   // Vertex indices and vertex normal indices are unique per file, not per
   // object. To convert a per-file index to a per-object index, decrement the

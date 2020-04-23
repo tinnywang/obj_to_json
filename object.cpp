@@ -35,8 +35,7 @@ object &parse(std::ifstream &file, const std::string &filename,
         point::point p;
         ss >> p.x >> p.y >> p.z;
         o.vertices.push_back(p);
-
-        o.vn_aggregate.push_back(std::make_pair(point::point{}, 0));
+        o.normals.push_back(point::point{});
         break;
       }
       case VN: {
@@ -68,10 +67,8 @@ object &parse(std::ifstream &file, const std::string &filename,
             std::getline(indices_ss, index);
             if (!index.empty()) {
               int vn_index = std::stoi(index) - o.vn_offset - 1;
-              std::pair<point::point, int> &pair = o.vn_aggregate.at(v_index);
-              pair.first =
-                  point::add(pair.first, o.vertex_normals.at(vn_index));
-              pair.second++;
+              point::point &normal = o.normals.at(v_index);
+              normal = point::add(normal, o.vertex_normals.at(vn_index));
             }
           } catch (std::invalid_argument e) {
             std::cerr << filename << ", line " << line_number << ": "
@@ -110,14 +107,6 @@ object &parse(std::ifstream &file, const std::string &filename,
     }
 
     pos = file.tellg();
-  }
-
-  for (auto it = o.vn_aggregate.begin(); it != o.vn_aggregate.end(); it++) {
-    point::point normal =
-        point::normalize(point::scale(it->first, 1.0 / it->second));
-    o.normals.push_back(normal.x);
-    o.normals.push_back(normal.y);
-    o.normals.push_back(normal.z);
   }
 
   return o;
@@ -193,11 +182,20 @@ void to_json(nlohmann::json &j, const object &o) {
                   vertices.push_back(p.z);
                 });
 
+  std::vector<double> normals;
+  std::for_each(o.normals.begin(), o.normals.end(),
+                [&normals](const point::point &p) {
+                  const point::point normal = point::normalize(p);
+                  normals.push_back(normal.x);
+                  normals.push_back(normal.y);
+                  normals.push_back(normal.z);
+                });
+
   j = nlohmann::json{
       {"name", o.name},
       {"vertices", vertices},
       {"faces", o.faces},
-      {"normals", o.normals},
+      {"normals", normals},
   };
 }
 
